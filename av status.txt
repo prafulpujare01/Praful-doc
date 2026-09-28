@@ -1,0 +1,95 @@
+10.6.4.191 kasperav.kotakseconline.com											 
+												 kaspersky update command for AWS / GDC / ADC rhel
+== == == == == == == == == == == == == == == == == ==
+systemctl status kesl.service klnagent64.service
+systemctl stop kesl.service klnagent64.service
+systemctl start kesl.service klnagent64.service
+systemctl restart kesl.service klnagent64.service
+
+
+cat /var/opt/kaspersky/kesl/common/kesl.ini
+cat /var/opt/kaspersky/kesl/common/kesl.ini|grep -i MaxMemory
+
+vi /var/opt/kaspersky/kesl/common/kesl.ini
+
+[Watchdog]
+MaxMemory=highest/2048MB/10%
+
+MaxMemory=highest/1024MB/10%
+
+[General]
+CoreDumps=no
+
+UseOnDemandCPULimit=Yes
+OnDemandCPULimit=1
+
+klnagent issue
+
+/opt/kaspersky/klnagent64/bin/klmover -address kasperav.kotakseconline.com
+
+/opt/kaspersky/klnagent64/bin/klnagchk -sendhb
+
+casio@1234
+
+rpm -qa |grep -i klnagent64
+rpm -qa |grep -i kesl
+
+rpm -e klnagent64
+rpm -e kesl
+rpm -qa |grep -i klnagent64
+rpm -qa |grep -i kesl
+rm -rf /var/opt/kaspersky
+rm -rf /var/log/kaspersky
+rm -rf /opt/kaspersky
+rm -rf /etc/opt/kaspersky
+systemctl daemon-reload
+
+mount -a remount,exec /var
+mount -a remount,exec /var/log
+
+
+
+
+cd /perfdata
+ls -lrt
+cd redhat
+ls -lrt
+
+rpm -ivh klnagent64-14.0.0-4646.x86_64.rpm
+
+/opt/kaspersky/klnagent64/lib/bin/setup/postinstall.pl
+
+y
+kasperav.kotakseconline.com
+enter
+enter
+enter
+echo $?
+
+ls -ltr
+rpm -ivh kesl-12.0.0-6672.x86_64.rpm
+
+/opt/kaspersky/kesl/bin/kesl-setup.pl
+Y
+Y
+Y
+enter
+echo $?
+-------------------------------------------
+/opt/kaspersky/klnagent64/bin/klnagchk
+
+
+kesl-control --app-info
+ 1002  2024-07-10 16:38:39  cd /opt/kaspersky/klnagent64/bin
+ 1003  2024-07-10 16:38:44  ./klnagchk -sendhb
+ 1004  2024-07-10 16:40:13  kesl-control --app-info
+ 1005  2024-07-10 16:44:59  kesl-control --get-task-list
+ 1006  2024-07-10 16:46:21  kesl-control --get-task-set 102
+ 1007  2024-07-10 16:46:44  kesl-control --get-task-state 102
+ 1008  2024-07-10 16:47:52  kesl-control --start-task 102 -W
+ 1009  2024-07-10 16:48:53  systemctl status kesl
+ 1010  2024-07-10 16:49:00  systemctl  stop kesl
+ 1011  2024-07-10 16:49:15  systemctl start kesl
+ 1012  2024-07-10 16:49:28  systemctl status kesl
+ 1013  2024-07-10 16:49:37  cd /opt/kaspersky/klnagent64/bin
+ 1014  2024-07-10 16:49:45  ./klnagchk -sendhb
