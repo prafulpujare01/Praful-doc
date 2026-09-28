@@ -1,0 +1,250 @@
+wWgTsuPotLT@2024_UAT	
+wWgTsuPotLT@2024_UAT_BKP
+uucplognbkp_2024_@_PROD
+
+
+kasperav.kotakseconline.com
+
+######### Migrate HRMS Server on RHEL9 ###########################################################################################
+rsync -e ssh -av --delete root@10.6.102.31:/etc/opt /etc
+rsync -e ssh -av --delete root@10.6.102.31:/var/opt /var
+rsync -e ssh -av --delete root@10.6.102.31:/home /
+rsync -e ssh -av --delete root@10.6.102.31:/usr/java /usr
+rsync -e ssh -av root@10.6.102.31:/usr/lib/systemd/system/ksserver*.service /usr/lib/systemd/system
+rsync -e ssh -av root@10.6.102.31:/usr/lib/systemd/system/glassfish*.service /usr/lib/systemd/system
+rsync -e ssh -av --delete root@10.6.102.31:/etc/samba /etc
+rsync -e ssh -av --delete root@10.6.102.31:/var/lib/mysql /var/lib
+rsync -e ssh -av --delete root@10.6.102.31:/root/.bash_history /root
+rsync -e ssh -av --delete root@10.6.102.31:/etc/nginx /etc
+
+rsync -e ssh -av --delete root@10.6.102.31:/var/log/secure /var/log
+rsync -e ssh -av --delete root@10.6.102.31:/var/log/sa /var/log
+rsync -e ssh -av --delete root@10.6.102.31:/var/log/httpd /var/log
+rsync -e ssh -av --delete root@10.6.102.31:/etc/vsftpd /etc
+
+
+rsync -e ssh -av --delete root@10.6.102.31:/etc/ssh/ssh_host_rsa_key /etc/ssh
+rsync -e ssh -av --delete root@10.6.102.31:/etc/ssh/ssh_host_ecdsa_key /etc/ssh
+rsync -e ssh -av --delete root@10.6.102.31:/etc/ssh/ssh_host_ed25519_key /etc/ssh
+
+
+update-crypto-policies --set LEGACY
+
+cd /var/opt/
+mkdir bkp
+cd /var/opt/bkp
+rsync -e ssh -av --delete root@10.6.102.31:/var/log/secure .
+rsync -e ssh -av --delete root@10.6.102.31:/var/log/sa .
+rsync -e ssh -av --delete root@10.6.102.31:/var/log/httpd .
+
+lsof -n |grep LISTEN 
+
+dnf install mariadb-server
+need to install postfix/smtp server
+need to create mariadb user and zabbix user
+cat /etc/export
+
+copy remaining user/group from /etc/passwd /etc/shadow /etc/group /etc/gshadow   -- Manually create user and copy password
+disable selinux/firewall
+copy /etc/samba/smb.conf config
+copy /etc/fstab file ---AS per requirement
+yum install samba
+yum install samba-common-tools
+systemctl enable smb
+yum install nfs-utils
+yum install cifs-utils
+yum install chkconfig
+++++++++++++++++++++++++++++++++++++++++++++++++++
+glassfish does not start after restart 
+Solution given below
+cd /usr/lib/systemd/system
+[root@rockylinux-82 system]# cat startup.service
+[Unit]
+Description=GlassFish Server
+After=multi-user.target
+
+[Service]
+ExecStart=/usr/local/bin/startup.sh
+DefaultDependencies=false
+TimeoutSec=5min
+Type=forking
+
+[Install]
+WantedBy=multi-user.target
++++++++++++++++++++++++++++++++++++++++++++++++++++
+OR
+
+cat /usr/lib/systemd/system/startup.service
+[Unit]
+After=network.target
+
+[Service]
+ExecStart=/home/startup.sh
+
+[Install]
+WantedBy=default.target
+
+
+########################################################################################################################################3
+chmod 755 /usr/local/bin/startup.sh
+systemctl daemon-reload
+systemctl unmask startup.service
+systemctl enable startup.service
+systemctl enable --now startup.service
+
+yum install aide
+aide --init
+mv /var/lib/aide/aide.db.new.gz /var/lib/aide/aide.db.gz
+/usr/sbin/aide --check
+
+https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/7/html/security_guide/sec-using-aide
+
+
+
+
+adduser -d /home/feedreader -s /bin/bash feedreader
+adduser -d /home/dowjones -s /sbin/nologin dowjones
+adduser -d /home/ramuser -s /bin/bash ramuser
+adduser -d /home/sqlservice -s /sbin/nologin sqlservice
+adduser -d /home/sqluatservice -s /sbin/nologin sqluatservice
+adduser -d /home/offmarket -s /sbin/nologin offmarket
+adduser -d /home/dmonadmin -s /bin/bash dmonadmin
+adduser -d /var/lib/zabbix -s /sbin/nologin -c "Zabbix Monitoring System" zabbix
+adduser -d /var/lib/logcheck -s /sbin/nologin -c "Logcheck user" logcheck
+adduser -d /home/secadmin -s /bin/bash secadmin
+adduser -d /var/lib/mysql -s /sbin/nologin -c "MariaDB Server" mysql
+adduser -d /var/lib/grafana -s /sbin/nologin -c "grafana user" grafana
+adduser -d /var/lib/nfs -s /sbin/nologin -c "Anonymous NFS User" nfsnobody
+
+
+yum install -y subscription-manager insights-client rhc rhc-worker-script
+convert2rhel --org 15101867 --activationkey convert2rhel
+https://developers.redhat.com/articles/2023/04/11/how-use-convert2rhel-migrate-centos-rhel
+https://www.redhat.com/en/blog/how-convert-centos-linux-rhel-red-hat-insights
+
+
+curl -o /etc/yum.repos.d/client-tools-for-rhel-7-server.repo https://ftp.redhat.com/redhat/client-tools/client-tools-for-rhel-7-server.repo
+curl -o /etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release https://www.redhat.com/security/data/fd431d51.txt
+yum install -y subscription-manager insights-client rhc rhc-worker-script
+rhc connect --organization ORG_ID --activation-key ACT_KEY
+
+
+curl -o /etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release https://www.redhat.com/security/data/fd431d51.txt
+curl --create-dirs -o /etc/rhsm/ca/redhat-uep.pem https://ftp.redhat.com/redhat/convert2rhel/redhat-uep.pem
+curl -o /etc/yum.repos.d/convert2rhel.repo https://ftp.redhat.com/redhat/convert2rhel/7/convert2rhel.repo
+yum repoinfo convert2rhel-for-rhel-7-rpms
+yum install -y convert2rhel
+yum install -y subscription-manager insights-client rhc rhc-worker-script
+subscription-manager orgs
+sed -i 's| and repo != "redhat.repo":|:|' /usr/lib/python2.7/site-packages/convert2rhel/repo.py
+grep ^hostname /etc/rhsm/rhsm.conf
+yum repolist -v
+convert2rhel --org 15101867 --activationkey convert2rhel
+convert2rhel --no-rhsm --enablerepo LocalRepo
+
+
+https://www.tecmint.com/upgrade-from-rhel-7-to-rhel-8/
+https://www.tecmint.com/upgrade-rhel-8-to-rhel-9/
+https://access.redhat.com/solutions/41278#rhel7only
+
+
+Jtrac - 10.6.102.121
+
+ pvcreate /dev/sdb1
+ vgextend rhel /dev/sdb1
+ lvextend -n /dev/mapper/rhel-home -L +5G -r
+ lvcreate -n mnt_hrms -L 80G rhel
+ mkfs.xfs /dev/mapper/rhel-mnt_hrms
+ mkdir /mnt/HRMS
+ vi /etc/fstab
+ /dev/mapper/rhel-mnt_hrms /mnt/HRMS xfs defaults,rw,nosuid,nodev,noexec,relatime 0 0
+ mount /mnt/HRMS
+ systemctl daemon-reload
+ mount /mnt/HRMS
+ 
+ 
+ subscription-manager clean
+subscription-manager remove --all
+
+cd /var/opt/WILDFLYSERVER/TEST/wildfly-18.0.1.Final/bin
+ls
+nohup ./standalone.sh -c standalone-full.xml -b 0.0.0.0 &
+
+vi /etc/yum.repos.d/redhat_local.repo
+[LocalRepo_BaseOS]
+name=LocalRepo_BaseOS
+enabled=1
+gpgcheck=0
+baseurl= http://10.6.4.75:8443/repositor/rhel9.4/rhel-9-for-x86_64-baseos-rpms/
+
+[LocalRepo_AppStream]
+name=LocalRepo_AppStream
+enabled=1
+gpgcheck=0
+baseurl= http://10.6.4.75:8443/repositor/rhel9.4/rhel-9-for-x86_64-appstream-rpms/
+
+uatweb32
+uatweb34
+10.6.123.113
+
+Server: uatweb31.kotakseconline.com
+==============================
+inotify-tools-3.14-8.el7.x86_64
+klnagent64-10.5.0-64.x86_64
+libtidy-0.99.0-31.20091203.el7.x86_64
+lightagent-5.1.44-514.x86_64
+mysql-workbench-community-6.3.4-1.el7.x86_64
+ncdu-1.12-3.el5.x86_64
+nmon-14g-1.el7.rf.x86_64
+phpMyAdmin-4.4.13.1-1.el7.noarch
+php-php-gettext-1.0.11-10.el7.noarch
+php-tcpdf-6.2.10-1.el7.noarch
+php-tcpdf-dejavu-sans-fonts-6.2.10-1.el7.noarch
+php-tidy-5.4.16-3.el7.x86_64
+proj-4.8.0-4.el7.x86_64
+puppetlabs-release-7-11.noarch
+tinyxml-2.6.2-3.el7.x86_64
+Total Number of 3rd Party RPMs on uatweb31.kotakseconline.com is 15
+==============================
+
+https://access.redhat.com/solutions/5436131
+Leapp upgrade fail with error "Inhibitor: Detected loaded kernel drivers which have been removed in RHEL 8. Upgrade cannot proceed."
+Issue
+Leapp upgrade fails with error as "Inhibitor: Detected loaded kernel drivers which have been removed in RHEL 8. Upgrade cannot proceed."
+
+Risk Factor: high (inhibitor)
+Title: Detected loaded kernel drivers which have been removed in RHEL 8. Upgrade cannot proceed.
+Summary: Support for the following RHEL 7 device drivers has been removed in RHEL 8: 
+mptbase
+mptscsih
+mptspi
+
+Resolution
+Backup the initramfs being currently used for booting
+# cp /boot/initramfs-$(uname -r).img /boot/initramfs-$(uname -r).img.backup
+
+Build a generic initramfs containing all drivers
+# dracut -N -f
+
+Stop the system
+# shutdown
+
+On the VMWare Hypervisor side, change the SCSI Controller type
+Change to "VMware Paravirtual". A warning is displayed.
+Click on "Change Type".
+
+Boot the system and once booted run following,
+# dracut -f --regenerate-all
+
+
+
+As per security audit concern we need to install Kaspersky antivirus on all BOF Production servers. 
+
+We have already installed Kaspersky antivirus on all UAT Linux servers.
+
+First we will install Kaspersky antivirus on Pre Prod servers and after successful installation we will install on Production Linux servers.
+
+Kindly provide your approval for install Kaspersky antivirus on Pre prod and Prod servers. 
+
+
+alternatives --set python /usr/bin/python3

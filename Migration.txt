@@ -1,0 +1,24 @@
+sr find -uatweb11 and add to ===\\ks2012devkit09\DEVFTP\LINUX_TEAM(DO_NOT_DELETE)\Yuvraj\Migration Plan\migration\Migration Plan===KSEC_BOF_Linux_Server_UAT
+
+
+================================
+
+1----->request port details
+
+
+From: emmanuel george (IT Apps, KSL) 
+Sent: Thursday, April 4, 2024 6:14 PM
+To: KS-NATIS (KS-Networks & Trading Infra Supp) <ks.natis@kotak.com>
+Cc: KS-Linux Team <kslinux.team@kotak.com>
+Subject: Firewall access details
+
+Hi Team,
+
+Kindly provide existing firewall access details for below server
+10.6.123.11 (uatweb11.kotakseconline.com)
+
+Thanks & Regards,
+Emmanuel George
+
+2------->
+ 
